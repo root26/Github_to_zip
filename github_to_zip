@@ -1,0 +1,53 @@
+#!/bin/bash
+
+
+
+             ██████╗  █████╗  ██████╗██╗  ██╗     ██╗   ██╗██████╗            
+             ██╔══██╗██╔══██╗██╔════╝██║ ██╔╝     ██║   ██║██╔══██╗           
+             ██████╔╝███████║██║     █████╔╝█████╗██║   ██║██████╔╝           
+             ██╔══██╗██╔══██║██║     ██╔═██╗╚════╝██║   ██║██╔═══╝            
+             ██████╔╝██║  ██║╚██████╗██║  ██╗     ╚██████╔╝██║                
+             ╚═════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝      ╚═════╝ ╚═╝                
+ ██████╗ ██╗████████╗██╗  ██╗██╗   ██╗██████╗     ██╗      ███████╗██╗██████╗ 
+██╔════╝ ██║╚══██╔══╝██║  ██║██║   ██║██╔══██╗    ╚██╗     ╚══███╔╝██║██╔══██╗
+██║  ███╗██║   ██║   ███████║██║   ██║██████╔╝     ╚██╗      ███╔╝ ██║██████╔╝
+██║   ██║██║   ██║   ██╔══██║██║   ██║██╔══██╗     ██╔╝     ███╔╝  ██║██╔═══╝ 
+╚██████╔╝██║   ██║   ██║  ██║╚██████╔╝██████╔╝    ██╔╝     ███████╗██║██║     
+ ╚═════╝ ╚═╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ╚═════╝     ╚═╝      ╚══════╝╚═╝╚═╝     
+                                                                              
+
+                                                      
+
+if [ "$1" ] && [ $1 = "-o" ]; then
+    echo -n "Entrez le nom de l'organisation : "
+    read ORGANISATION
+    echo -n "Entrez votre identifiant GitHub : "
+    read USERNAME
+    echo -n "Entrez votre mot de passe GitHub : "
+    read -s PASSWORD
+    echo -n " [test de connection] "
+    curl -si "$USERNAME:$PASSWORD" https://api.github.com/orgs/$ORGANISATION | head -n 1 
+# Création du repertoire de répo zippé ( date + _zip )
+    str=$(date +%d_%m_%Y)"_"$ORGANISATION"_zip"
+    mkdir $str
+# Clone du répo - zip du répo - rm du répertoire src - evois vers le répertoire
+    for i in `curl -si "$USERNAME:$PASSWORD" https://api.github.com/orgs/$ORGANISATION/repos?per_page=100 | grep html_url | awk 'NR%2 == 0'| cut -d ':'  -f 2-3 | tr -d '",'`; do git clone $i.git && zip -r ${i:(20+${#ORGANISATION})}.zip ${i:(20+${#ORGANISATION})} && rm -rf ${i:(20+${#ORGANISATION})} && mv ${i:(20+${#ORGANISATION})}.zip $str ;  done
+
+elif [ "$1" ] && [ $1 = "-c" ]; then
+    echo -n "Entrez votre identifiant GitHub : "
+    read USERNAME
+    stty -echo
+    echo -n "Entrez votre mot de passe GitHub : "
+    read PASSWORD
+    stty echo
+    echo -n " [test de connection] "
+    ret_co=$(curl -si "$USERNAME:$PASSWORD" https://api.github.com/users/$USERNAME | head -n 1)
+    echo $ret_co
+    str=$(date +%d_%m_%Y)"_"$USERNAME"_zip"
+    mkdir $str
+    for i in `curl -si "$USERNAME:$PASSWORD" https://api.github.com/users/$USERNAME/repos?per_page=100 | grep html_url | awk 'NR%2 == 0'| cut -d ':'  -f 2-3 | tr -d '",'`; do git clone $i.git && zip -r ${i:(20+${#USERNAME})}.zip ${i:(20+${#USERNAME})} && rm -rf ${i:(20+${#USERNAME})} && mv ${i:(20+${#USERNAME})}.zip $str ;  done
+else
+    echo "./backup_repo -c || -o " 
+    echo "-o : Pour un compte [organisation]"
+    echo "-c : Pour un compte [utilisateur]"
+fi
