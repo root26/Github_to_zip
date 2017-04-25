@@ -18,6 +18,6 @@
 
 <h3> Backup local d'un compte git <h3\>
 
-    $ ./backup_repo -c || -o "
+    $ ./github_to_zip -c || -o "
     $ -o : Pour un compte [organisation]"
     $ -c : Pour un compte [utilisateur]"
